@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GREEN-API Test</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel-left">
+      <input id="idInstance" class="ctrl" type="text" placeholder="idInstance" autocomplete="off" />
+      <input id="apiTokenInstance" class="ctrl" type="password" placeholder="ApiTokenInstance" autocomplete="off" />
+
+      <button id="btnGetSettings" class="btn">getSettings</button>
+      <button id="btnGetState" class="btn">getStateInstance</button>
+
+      <div class="spacer"></div>
+
+      <input id="to" class="ctrl" type="text" placeholder="77470532536" autocomplete="off" />
+      <textarea id="message" class="ctrl textarea" rows="2" placeholder="Hello world!"></textarea>
+      <button id="btnSendMessage" class="btn">sendMessage</button>
+
+      <div class="spacer"></div>
+
+      <input id="toFile" class="ctrl" type="text" placeholder="77470532536" autocomplete="off" />
+      <input id="urlFile" class="ctrl" type="text" placeholder="https://my.site.com/img/horse.png" />
+      <button id="btnSendFile" class="btn">sendFileByUrl</button>
+    </div>
+
+    <div class="panel-right">
+      <div class="label">Ответ:</div>
+      <textarea id="output" class="output" readonly spellcheck="false"></textarea>
+      <div id="status" class="status">ready</div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
