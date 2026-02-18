@@ -1,8 +1,8 @@
 const API_URL = "https://7103.api.greenapi.com";
 
 // ВПИШИ СЮДА СВОИ ДАННЫЕ (если хочешь, чтобы они были "прописаны в коде"):
-const DEFAULT_ID_INSTANCE = "7103519444";
-const DEFAULT_API_TOKEN_INSTANCE = "0379c0b329d848e0ace87b9e643c3f0990867cb053a8400498";
+const DEFAULT_ID_INSTANCE = "71";
+const DEFAULT_API_TOKEN_INSTANCE = "037";
 
 const el = (id) => document.getElementById(id);
 
