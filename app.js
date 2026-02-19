@@ -1,157 +1,212 @@
 const API_URL = "https://7103.api.greenapi.com";
 
-// ВПИШИ СЮДА СВОИ ДАННЫЕ (если хочешь, чтобы они были "прописаны в коде"):
-const DEFAULT_ID_INSTANCE = "71";
-const DEFAULT_API_TOKEN_INSTANCE = "037";
+// мои дефолтные переменные значения для локального теста 
+const DEFAULT_ID_INSTANCE = "";
+const DEFAULT_API_TOKEN_INSTANCE = "";
 
-const el = (id) => document.getElementById(id);
 
-const idInstanceEl = el("idInstance");
-const tokenEl = el("apiTokenInstance");
-const outEl = el("output");
-const statusEl = el("status");
+function el(id) {
+  return document.getElementById(id);
+}
 
-const btnGetSettings = el("btnGetSettings");
-const btnGetState = el("btnGetState");
-const btnSendMessage = el("btnSendMessage");
-const btnSendFile = el("btnSendFile");
+// кнопки
+const idInstanceEl = el("idInstance");           // input для idInstance
+const tokenEl = el("apiTokenInstance");          // input для apiTokenInstance
+const outEl = el("output");                      // textarea для результата
+const statusEl = el("status");                   // статус ok/error/wait
+const btnGetSettings = el("btnGetSettings");     
+const btnGetState = el("btnGetState");           
+const btnSendMessage = el("btnSendMessage");     
+const btnSendFile = el("btnSendFile");           
 
-window.addEventListener("DOMContentLoaded", () => {
-  if (DEFAULT_ID_INSTANCE && DEFAULT_ID_INSTANCE !== "Заполните ID instance") {
+// для себя
+window.addEventListener("ContentLoaded", () => {
+  if (DEFAULT_ID_INSTANCE) {
     idInstanceEl.value = DEFAULT_ID_INSTANCE;
   }
-  if (DEFAULT_API_TOKEN_INSTANCE && DEFAULT_API_TOKEN_INSTANCE !== "Заполните token") {
+  if (DEFAULT_API_TOKEN_INSTANCE) {
     tokenEl.value = DEFAULT_API_TOKEN_INSTANCE;
   }
 });
 
+// 6) Показываем статус пользователю
 function setStatus(text) {
-  if (statusEl) statusEl.textContent = text;
+  if (statusEl) statusEl.textContent = text; // статус пишем прямо в DOM
 }
 
+// 7) Красиво форматируем объект в JSON (для textarea)
 function pretty(obj) {
   return JSON.stringify(obj, null, 2);
 }
 
+// 8) Иногда API возвращает JSON, иногда plain text — попробуем распарсить
 function parseMaybeJson(text) {
-  try { return JSON.parse(text); } catch { return text; }
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    return text;
+  }
 }
 
-function requireCreds() {
-  const idInstance = (idInstanceEl.value || "").trim();
+// 9) Проверяем, что пользователь ввел idInstance и token
+function getCredsOrThrow() {
+  const idInstance = (idInstanceEl.value || "").trim();       // читаем и убираем пробелы
   const apiTokenInstance = (tokenEl.value || "").trim();
-  if (!idInstance || !apiTokenInstance) throw new Error("Заполни idInstance и ApiTokenInstance");
+
+  // если чего-то нет — бросаем ошибку (вызовем её выше)
+  if (!idInstance || !apiTokenInstance) {
+    throw new Error("Заполни idInstance и ApiTokenInstance");
+  }
+
+  // возвращаем объект с данными
   return { idInstance, apiTokenInstance };
 }
 
+// нормализация вида chatId. ex: 77001234567@c.us
 function toChatId(input) {
   const raw = (input || "").trim();
   if (!raw) return null;
-  if (raw.includes("@")) return raw;
-  const digits = raw.replace(/\D/g, "");
+  const digits = raw.replace(/\D/g, ""); //вытащим цифры из строки
   if (!digits) return null;
-  return `${digits}@c.us`;
+  return `${digits}@c.us`; // суффикс WhatsApp
 }
 
-function endpoint({ idInstance, apiTokenInstance }, methodName) {
-  return `${API_URL}/waInstance${idInstance}/${methodName}/${apiTokenInstance}`;
+// URL endpoint идол: https://7103.api.greenapi.com/waInstance{ID}/getSettings/{TOKEN}
+function buildUrl(creds, methodName) {
+  return `${API_URL}/waInstance${creds.idInstance}/${methodName}/${creds.apiTokenInstance}`;
 }
 
-async function callApi({ httpMethod, methodName, payload }) {
+// функция fetch на нужный метод и результат в output
+async function callApi(httpMethod, methodName, payload) {
+  // try получить креды
   let creds;
   try {
-    creds = requireCreds();
+    creds = getCredsOrThrow();
   } catch (e) {
+    // кредов нет — ошибкa
     outEl.value = pretty({ error: e.message });
     setStatus("error");
     return;
   }
+  // конечный URL
+  const url = buildUrl(creds, methodName);
+  setStatus("wait...");
+  const options = {
+    method: httpMethod,
+    headers: {}
+  };
 
-  const url = endpoint(creds, methodName);
-  setStatus("working...");
+  // payload — POST с JSON
+  if (payload) {
+    options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(payload);
+  }
 
-  let res, text;
+  // запрос
+  let res;
+  let text;
   try {
-    const options = { method: httpMethod, headers: {} };
-    if (payload) {
-      options.headers["Content-Type"] = "application/json";
-      options.body = JSON.stringify(payload);
-    }
-    res = await fetch(url, options);
-    text = await res.text();
+    res = await fetch(url, options);   
+    text = await res.text();           
   } catch (e) {
-    outEl.value = pretty({ request: { httpMethod, url, payload }, error: e.message || String(e) });
+    outEl.value = pretty({
+      request: { httpMethod, url, payload: payload ?? null },
+      error: e.message || String(e)
+    });
     setStatus("error");
     return;
   }
 
+  // вывод для видео
   outEl.value = pretty({
-    request: { httpMethod, url, payload: payload ?? null },
-    response: { ok: res.ok, status: res.status, statusText: res.statusText, body: parseMaybeJson(text) }
+    request: {
+      httpMethod,
+      url,
+      payload: payload ?? null
+    },
+    response: {
+      ok: res.ok,
+      status: res.status,
+      statusText: res.statusText,
+      body: parseMaybeJson(text)
+    }
   });
 
+  // статус
   setStatus(res.ok ? "ok" : "error");
 }
 
-// getSettings
+// Обработчики
+
+// GET getSettings
 btnGetSettings.addEventListener("click", () => {
-  callApi({ httpMethod: "GET", methodName: "getSettings" });
+  callApi("GET", "getSettings", null);
 });
 
-// getStateInstance
+// GET getStateInstance
 btnGetState.addEventListener("click", () => {
-  callApi({ httpMethod: "GET", methodName: "getStateInstance" });
+  callApi("GET", "getStateInstance", null);
 });
 
-// sendMessage
+// POST sendMessage
 btnSendMessage.addEventListener("click", () => {
-  const chatId = toChatId(el("to").value);
+  // данные из формы
+  const toValue = el("to").value;
+  const chatId = toChatId(toValue);
   const message = (el("message").value || "").trim();
 
+  // валидация 
   if (!chatId) {
-    outEl.value = pretty({ error: "Заполни номер получателя для sendMessage" });
+    outEl.value = pretty({ error: "Заполни номер получателя (chatId)" });
     setStatus("error");
     return;
   }
   if (!message) {
-    outEl.value = pretty({ error: "Заполни текст сообщения для sendMessage" });
+    outEl.value = pretty({ error: "Заполни текст сообщения" });
     setStatus("error");
     return;
   }
 
-  callApi({
-    httpMethod: "POST",
-    methodName: "sendMessage",
-    payload: { chatId, message }
+  // отправка запроса
+  callApi("POST", "sendMessage", {
+    chatId: chatId,
+    message: message
   });
 });
 
-// sendFileByUrl
+// POST sendFileByUrl
 btnSendFile.addEventListener("click", () => {
-  const chatId = toChatId(el("toFile").value);
+  // номер и ссылку
+  const toFileValue = el("toFile").value;
+  const chatId = toChatId(toFileValue);
   const urlFile = (el("urlFile").value || "").trim();
 
+  // валидация
   if (!chatId) {
-    outEl.value = pretty({ error: "Заполни номер получателя для sendFileByUrl" });
+    outEl.value = pretty({ error: "Заполни номер получателя" });
     setStatus("error");
     return;
   }
   if (!urlFile) {
-    outEl.value = pretty({ error: "Заполни urlFile для sendFileByUrl" });
+    outEl.value = pretty({ error: "Заполни urlFile" });
     setStatus("error");
     return;
   }
 
-  // fileName обязателен по документации, но мы вычисляем его из URL автоматически
+  // 16.3) fileName в документации часто обязателен.
+  // имя файла из URL .../c.png -> c.png
   let fileName = "file";
   try {
-    const u = new URL(urlFile);
-    fileName = u.pathname.split("/").filter(Boolean).pop() || "file";
-  } catch {}
+    const u = new URL(urlFile); 
+    const last = u.pathname.split("/").filter(Boolean).pop();
+    fileName = last || "file";
+  } catch (e) {
+  }
 
-  callApi({
-    httpMethod: "POST",
-    methodName: "sendFileByUrl",
-    payload: { chatId, urlFile, fileName }
+  // отправка запроса
+  callApi("POST", "sendFileByUrl", {
+    chatId: chatId,
+    urlFile: urlFile,
+    fileName: fileName
   });
 });

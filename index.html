@@ -1,36 +1,37 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>GREEN-API Test</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>green-api-test</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <div class="wrap">
     <div class="panel-left">
-      <input id="idInstance" class="ctrl" type="text" placeholder="idInstance" autocomplete="off" />
-      <input id="apiTokenInstance" class="ctrl" type="password" placeholder="ApiTokenInstance" autocomplete="off" />
+      <input id="idInstance" class="ctrl" type="text" placeholder="idInstance">
+      <input id="apiTokenInstance" class="ctrl" type="password" placeholder="ApiTokenInstance">
 
-      <button id="btnGetSettings" class="btn">getSettings</button>
-      <button id="btnGetState" class="btn">getStateInstance</button>
-
-      <div class="spacer"></div>
-
-      <input id="to" class="ctrl" type="text" placeholder="77470532536" autocomplete="off" />
-      <textarea id="message" class="ctrl textarea" rows="2" placeholder="Hello world!"></textarea>
-      <button id="btnSendMessage" class="btn">sendMessage</button>
+      <button id="btnGetSettings" class="btn" type="button">getSettings</button>
+      <button id="btnGetState" class="btn" type="button">getStateInstance</button>
 
       <div class="spacer"></div>
 
-      <input id="toFile" class="ctrl" type="text" placeholder="77470532536" autocomplete="off" />
-      <input id="urlFile" class="ctrl" type="text" placeholder="https://my.site.com/img/horse.png" />
-      <button id="btnSendFile" class="btn">sendFileByUrl</button>
+      <input id="to" class="ctrl" type="text" placeholder="77777777777">
+      <textarea id="message" class="ctrl textarea" rows="2" placeholder="Text"></textarea>
+      <button id="btnSendMessage" class="btn" type="button">sendMessage</button>
+
+      <div class="spacer"></div>
+
+      <input id="toFile" class="ctrl" type="text" placeholder="77777777777">
+      <input id="urlFile" class="ctrl" type="text" placeholder="https://hello.im.azhar/textme.png">
+      <button id="btnSendFile" class="btn" type="button">sendFileByUrl</button>
     </div>
 
     <div class="panel-right">
       <div class="label">Ответ:</div>
-      <textarea id="output" class="output" readonly spellcheck="false"></textarea>
+      <textarea id="output" class="output" readonly></textarea>
       <div id="status" class="status">ready</div>
     </div>
   </div>
